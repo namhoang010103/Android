@@ -1,12 +1,9 @@
-import 'package:dack/Login_Signup/screen/login_screen.dart';
-import 'package:dack/Login_Signup/screen/signup_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'service/firebase_service.dart';
+import 'utils/routes.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();  // Khởi tạo Firebase
-
+  await FirebaseService.initializeFirebase();
   runApp(const MyApp());
 }
 
@@ -15,8 +12,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return const MaterialApp(
-        home: LoginScreen(),
-      );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Ứng Dụng Đặt Vé Xem Phim',
+      theme: ThemeData(primarySwatch: Colors.red),
+      initialRoute: Routes.splash,
+      onGenerateRoute: Routes.generateRoute,
+    );
   }
 }
