@@ -1,10 +1,9 @@
-// lib/screen/seat_booking_screen.dart
-
+// lib/screens/seat_booking_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dack/screen/payment_screen.dart'; // Import PaymentScreen
-import '../models/Movie.dart'; // Đảm bảo import đúng đường dẫn
+import 'payment_screen.dart'; // Đảm bảo đường dẫn đúng
+import '../models/Movie.dart'; // Đảm bảo đường dẫn đúng
 
 enum SeatStatus { available, selected, booked }
 
@@ -21,8 +20,16 @@ class SeatBookingScreen extends StatefulWidget {
 }
 
 class _SeatBookingScreenState extends State<SeatBookingScreen> {
-  final List<DateTime> _dates = List.generate(7, (i) => DateTime.now().add(Duration(days: i)));
-  final List<String> _times = ['09:00', '11:30', '14:00', '16:30', '19:00', '21:30'];
+  final List<DateTime> _dates =
+  List.generate(7, (i) => DateTime.now().add(Duration(days: i)));
+  final List<String> _times = [
+    '09:00',
+    '11:30',
+    '14:00',
+    '16:30',
+    '19:00',
+    '21:30'
+  ];
 
   late DateTime _selectedDate;
   late String _selectedTime;
@@ -30,8 +37,6 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
   final int rows = 4;
   final int cols = 6;
   int get seatCount => rows * cols;
-
-  final Map<DateTime, Map<String, List<SeatStatus>>> _seatData = {};
 
   // Danh sách ghế đã chọn tạm thời
   List<int> _selectedSeats = [];
@@ -42,19 +47,9 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
 
     _selectedDate = _dates.first;
     _selectedTime = _times.first;
-
-    // Tạo sẵn data cục bộ (available) cho tất cả date/time
-    for (final d in _dates) {
-      _seatData[d] = {};
-      for (final t in _times) {
-        _seatData[d]![t] = List.generate(seatCount, (_) => SeatStatus.available);
-      }
-    }
-
-    // Load ghế cho (date/time) đầu tiên
-    Future.microtask(() => _loadSeatsForCurrentDateTime());
   }
 
+  // Hàm tạo Document ID giống như trong BookedTicketsScreen
   String _makeDocId(String movieId, DateTime date, String time) {
     final dd = date.day.toString().padLeft(2, '0');
     final mm = date.month.toString().padLeft(2, '0');
@@ -63,69 +58,42 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     return '${movieId}_$dd$mm$yyyy$hhmm';
   }
 
-  Future<void> _loadSeatsForCurrentDateTime() async {
+  // Hàm lấy trạng thái ghế từ Firestore theo thời gian thực
+  Stream<List<SeatStatus>> _fetchSeatStatus() {
     final docId = _makeDocId(widget.movie.id, _selectedDate, _selectedTime);
-    final docRef = FirebaseFirestore.instance.collection('seats').doc(docId);
-
-    final docSnap = await docRef.get();
-    if (docSnap.exists) {
-      final data = docSnap.data();
-      final List<dynamic>? seatList = data?['seats'];
-      if (seatList != null) {
-        for (int i = 0; i < seatList.length; i++) {
-          final val = seatList[i];
-          SeatStatus st = SeatStatus.available;
-          if (val == 2) st = SeatStatus.booked;
-          _seatData[_selectedDate]![_selectedTime]![i] = st;
-        }
-      }
-    }
-    setState(() {}); // cập nhật UI
-  }
-
-  Future<void> _saveSeatsToFirestore(List<int> seatsToBook) async {
-    final docId = _makeDocId(widget.movie.id, _selectedDate, _selectedTime);
-    final docRef = FirebaseFirestore.instance.collection('seats').doc(docId);
-
-    // Lấy hiện tại dữ liệu ghế
-    final docSnap = await docRef.get();
-    List<dynamic> seatList = [];
-    if (docSnap.exists && docSnap.data()?['seats'] != null) {
-      seatList = docSnap.data()!['seats'];
-    } else {
-      seatList = List.generate(seatCount, (_) => 0);
-    }
-
-    // Cập nhật các ghế đã chọn thành booked (2)
-    for (final seatIndex in seatsToBook) {
-      seatList[seatIndex] = 2;
-    }
-
-    await docRef.set(
-      {
-        'movie': widget.movie.title, // Thêm thông tin phim
-        'seats': seatList,
-      },
-      SetOptions(merge: true),
-    );
-  }
-
-  void _onSeatTap(int index) {
-    final seats = _seatData[_selectedDate]![_selectedTime]!;
-    final status = seats[index];
-    if (status == SeatStatus.booked) return; // không chọn ghế đã booked
-
-    setState(() {
-      if (status == SeatStatus.available) {
-        seats[index] = SeatStatus.selected;
-        _selectedSeats.add(index);
-      } else if (status == SeatStatus.selected) {
-        seats[index] = SeatStatus.available;
-        _selectedSeats.remove(index);
+    return FirebaseFirestore.instance
+        .collection('seats')
+        .doc(docId)
+        .snapshots()
+        .map((docSnap) {
+      if (docSnap.exists) {
+        final seatList = docSnap.get('seats') as List<dynamic>? ?? [];
+        return seatList.map((val) {
+          if (val == 0) return SeatStatus.available;
+          if (val == 2) return SeatStatus.booked;
+          return SeatStatus.available; // Mặc định
+        }).toList();
+      } else {
+        return List.generate(seatCount, (_) => SeatStatus.available);
       }
     });
   }
 
+  // Hàm xử lý khi người dùng nhấn chọn ghế
+  void _onSeatTap(int index, List<SeatStatus> seats) {
+    final status = seats[index];
+    if (status == SeatStatus.booked) return; // Không chọn ghế đã booked
+
+    setState(() {
+      if (_selectedSeats.contains(index)) {
+        _selectedSeats.remove(index);
+      } else {
+        _selectedSeats.add(index);
+      }
+    });
+  }
+
+  // Hàm xác nhận đặt ghế
   Future<void> _onConfirmSeats() async {
     if (_selectedSeats.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -138,7 +106,9 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bạn chưa đăng nhập. Vui lòng đăng nhập để đặt vé.')),
+        const SnackBar(
+            content: Text(
+                'Bạn chưa đăng nhập. Vui lòng đăng nhập để đặt vé.')),
       );
       return;
     }
@@ -161,12 +131,13 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
         // Sử dụng transaction để đảm bảo tính nguyên tử
         await FirebaseFirestore.instance.runTransaction((transaction) async {
           final docId = _makeDocId(widget.movie.id, _selectedDate, _selectedTime);
-          final seatDocRef = FirebaseFirestore.instance.collection('seats').doc(docId);
+          final seatDocRef =
+          FirebaseFirestore.instance.collection('seats').doc(docId);
 
           final seatDocSnap = await transaction.get(seatDocRef);
           List<dynamic> seatList = [];
-          if (seatDocSnap.exists && seatDocSnap.data()?['seats'] != null) {
-            seatList = List<dynamic>.from(seatDocSnap.data()!['seats']);
+          if (seatDocSnap.exists && seatDocSnap.get('seats') != null) {
+            seatList = List<dynamic>.from(seatDocSnap.get('seats'));
           } else {
             seatList = List<dynamic>.generate(seatCount, (_) => 0);
           }
@@ -185,7 +156,7 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
 
           // Cập nhật vào Firestore
           transaction.set(seatDocRef, {
-            'movie': widget.movie.title,
+            'movie': widget.movie.title, // Thêm thông tin phim
             'seats': seatList,
             'timestamp': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
@@ -197,7 +168,8 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
           'movieId': widget.movie.id,
           'movieTitle': widget.movie.title,
           'seats': _selectedSeats,
-          'date': '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
+          'date':
+          '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
           'time': _selectedTime,
           'totalPrice': _selectedSeats.length * 100000, // Giả sử mỗi ghế 100,000 VND
           'status': 'confirmed',
@@ -206,9 +178,6 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
 
         // Cập nhật trạng thái ghế trong local state
         setState(() {
-          for (final index in _selectedSeats) {
-            _seatData[_selectedDate]![_selectedTime]![index] = SeatStatus.booked;
-          }
           _selectedSeats.clear();
         });
 
@@ -235,9 +204,6 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     } else {
       // Nếu thanh toán không thành công hoặc bị hủy, giữ trạng thái ghế không đổi
       setState(() {
-        for (final index in _selectedSeats) {
-          _seatData[_selectedDate]![_selectedTime]![index] = SeatStatus.available;
-        }
         _selectedSeats.clear();
       });
 
@@ -254,8 +220,8 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     }
   }
 
-  Widget _buildSeatGrid() {
-    final seats = _seatData[_selectedDate]![_selectedTime]!;
+  // Hàm xây dựng lưới ghế
+  Widget _buildSeatGrid(List<SeatStatus> seats) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -268,19 +234,25 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
       itemBuilder: (_, index) {
         final st = seats[index];
         Color color;
-        switch (st) {
-          case SeatStatus.available:
-            color = Colors.green;
-            break;
-          case SeatStatus.selected:
-            color = Colors.yellow;
-            break;
-          case SeatStatus.booked:
-            color = Colors.red;
-            break;
+
+        // Kiểm tra xem ghế này có nằm trong danh sách ghế đã chọn hay không
+        if (_selectedSeats.contains(index)) {
+          color = Colors.yellow; // Ghế đang được chọn
+        } else {
+          switch (st) {
+            case SeatStatus.available:
+              color = Colors.green;
+              break;
+            case SeatStatus.booked:
+              color = Colors.red;
+              break;
+            default:
+              color = Colors.green;
+          }
         }
+
         return GestureDetector(
-          onTap: () => _onSeatTap(index),
+          onTap: () => _onSeatTap(index, seats),
           child: Container(
             decoration: BoxDecoration(
               color: color,
@@ -298,26 +270,26 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     );
   }
 
+  // Hàm xây dựng bộ chọn ngày
   Widget _buildDatePicker() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: _dates.map((date) {
-          final isSelected = date.day == _selectedDate.day
-              && date.month == _selectedDate.month
-              && date.year == _selectedDate.year;
+          final isSelected = date.day == _selectedDate.day &&
+              date.month == _selectedDate.month &&
+              date.year == _selectedDate.year;
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ChoiceChip(
               label: Text('${date.day}/${date.month}'),
               selected: isSelected,
               selectedColor: Colors.blue,
-              onSelected: (_) async {
+              onSelected: (_) {
                 setState(() {
                   _selectedDate = date;
+                  _selectedSeats.clear(); // Xóa danh sách ghế đã chọn khi thay đổi ngày
                 });
-                // Load Firestore cho date này
-                await _loadSeatsForCurrentDateTime();
               },
             ),
           );
@@ -326,6 +298,7 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     );
   }
 
+  // Hàm xây dựng bộ chọn giờ
   Widget _buildTimePicker() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -338,12 +311,11 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
               label: Text(time),
               selected: isSelected,
               selectedColor: Colors.blue,
-              onSelected: (_) async {
+              onSelected: (_) {
                 setState(() {
                   _selectedTime = time;
+                  _selectedSeats.clear(); // Xóa danh sách ghế đã chọn khi thay đổi giờ
                 });
-                // Load Firestore cho time này
-                await _loadSeatsForCurrentDateTime();
               },
             ),
           );
@@ -381,7 +353,21 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            _buildSeatGrid(),
+            StreamBuilder<List<SeatStatus>>(
+              stream: _fetchSeatStatus(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                      child: Text('Đã xảy ra lỗi: ${snapshot.error}'));
+                }
+                final seats = snapshot.data ??
+                    List.generate(seatCount, (_) => SeatStatus.available);
+                return _buildSeatGrid(seats);
+              },
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _onConfirmSeats,

@@ -1,5 +1,4 @@
-// lib/models/booking.dart
-
+// lib/models/Booking.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Booking {
@@ -8,11 +7,11 @@ class Booking {
   final String movieId;
   final String movieTitle;
   final List<int> seats;
-  final String date; // Định dạng: YYYY-MM-DD
-  final String time; // Định dạng: HH:MM
+  final String date; // Định dạng: yyyy-mm-dd
+  final String time; // Định dạng: hh:mm
   final int totalPrice;
-  final String status; // 'confirmed' hoặc 'cancelled'
-  final Timestamp timestamp;
+  final String status;
+  final Timestamp timestamp; // Thêm trường timestamp
 
   Booking({
     required this.id,
@@ -27,23 +26,21 @@ class Booking {
     required this.timestamp,
   });
 
-  // Factory constructor để tạo Booking từ dữ liệu Firestore
   factory Booking.fromFirestore(Map<String, dynamic> data, String documentId) {
     return Booking(
       id: documentId,
       userId: data['userId'] ?? '',
       movieId: data['movieId'] ?? '',
-      movieTitle: data['movieTitle'] ?? 'Không rõ',
+      movieTitle: data['movieTitle'] ?? '',
       seats: List<int>.from(data['seats'] ?? []),
       date: data['date'] ?? '',
       time: data['time'] ?? '',
-      totalPrice: data['totalPrice']?.toInt() ?? 0,
+      totalPrice: data['totalPrice'] ?? 0,
       status: data['status'] ?? 'confirmed',
-      timestamp: data['timestamp'] ?? Timestamp.now(),
+      timestamp: data['timestamp'] ?? Timestamp.now(), // Thêm trường timestamp
     );
   }
 
-  // Phương thức để chuyển đổi Booking thành Map để lưu vào Firestore
   Map<String, dynamic> toFirestore() {
     return {
       'userId': userId,
@@ -54,7 +51,7 @@ class Booking {
       'time': time,
       'totalPrice': totalPrice,
       'status': status,
-      'timestamp': timestamp,
+      'timestamp': FieldValue.serverTimestamp(), // Sử dụng server timestamp
     };
   }
 }
