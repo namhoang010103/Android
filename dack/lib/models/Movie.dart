@@ -1,22 +1,46 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Movie {
   final String id;
+  final String poster;
   final String title;
-  final String imageUrl;
   final String genre;
+  final String desc;
   final double rating;
+  final int duration;
+  final DateTime releaseDate;
 
-  Movie({required this.id, required this.title, required this.imageUrl, required this.genre, required this.rating});
+  Movie({
+    required this.id,
+    required this.poster,
+    required this.title,
+    required this.genre,
+    required this.desc,
+    required this.rating,
+    required this.duration,
+    required this.releaseDate,
+  });
 
-  factory Movie.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory Movie.fromFirestore(Map<String, dynamic> data, String documentId) {
     return Movie(
-      id: doc.id,
-      title: data['title'],
-      imageUrl: data['image'],
-      genre: data['genre'],
-      rating: data['rating'],
+      id: documentId,
+      poster: data['poster'] ?? '',
+      title: data['title'] ?? '',
+      genre: data['genre'] ?? '',
+      desc: data['desc'] ?? '',
+      rating: (data['rating'] as num).toDouble(),
+      duration: data['duration'],
+      releaseDate: DateTime.parse(data['releaseDate']),
     );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'poster': poster,
+      'title': title,
+      'genre': genre,
+      'desc': desc,
+      'rating': rating,
+      'duration': duration,
+      'releaseDate': releaseDate.toIso8601String(),
+    };
   }
 }

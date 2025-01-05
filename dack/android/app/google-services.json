@@ -12,7 +12,20 @@
           "package_name": "com.example.dack"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1069798729056-vk7789mm16bqvob33hkdnq9bdlvs6pp6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dack",
+            "certificate_hash": "74d107be69c0daaeb90ab06f9af39b53720bbbc6"
+          }
+        },
+        {
+          "client_id": "1069798729056-heb49k0pomouc391ge04v0ful6ulqftg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDeaugIw-RvEzv7F2i4NheXJmSWE7fL7E0"
@@ -20,7 +33,91 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069798729056-heb49k0pomouc391ge04v0ful6ulqftg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1069798729056-22qg48cmpuiol8bucv5d2ug1b1empjpl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.moviebooking"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069798729056:android:91b6bf85e07aa4e74bea05",
+        "android_client_info": {
+          "package_name": "com.example.moviebooking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1069798729056-heb49k0pomouc391ge04v0ful6ulqftg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeaugIw-RvEzv7F2i4NheXJmSWE7fL7E0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069798729056-heb49k0pomouc391ge04v0ful6ulqftg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1069798729056-22qg48cmpuiol8bucv5d2ug1b1empjpl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.moviebooking"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069798729056:android:5267390342e4ffdb4bea05",
+        "android_client_info": {
+          "package_name": "com.example.test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1069798729056-heb49k0pomouc391ge04v0ful6ulqftg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeaugIw-RvEzv7F2i4NheXJmSWE7fL7E0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069798729056-heb49k0pomouc391ge04v0ful6ulqftg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1069798729056-22qg48cmpuiol8bucv5d2ug1b1empjpl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.moviebooking"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,104 +1,193 @@
+import 'package:dack/screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../utils/routes.dart';
+import 'package:dack/Widget/movie_info.dart';
+import 'package:dack/core/constants.dart';
+import 'package:dack/models/Movie.dart';
+import 'package:dack/screen/reservation_screen.dart'; // Giả sử đây là SeatBookingScreen
 
-class MovieDetailScreen extends StatelessWidget {
-  final String title;
-  final String imageUrl;
-  final String genre;
-  final double rating;
+class MovieDetailPage extends StatelessWidget {
+  final Movie movie;
 
-  const MovieDetailScreen({
-    Key? key,
-    required this.title,
-    required this.imageUrl,
-    required this.genre,
-    required this.rating,
-  }) : super(key: key);
+  const MovieDetailPage({Key? key, required this.movie}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Danh sách các thời gian chiếu
-    final List<String> showtimes = [
-      '10:00 AM',
-      '1:00 PM',
-      '4:00 PM',
-      '7:00 PM',
-      '10:00 PM'
-    ];
-
     return Scaffold(
+      backgroundColor: appBackgroundColor,
       appBar: AppBar(
-        title: Text(title),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.network(imageUrl, fit: BoxFit.cover),
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              genre,
-              style: const TextStyle(color: Colors.grey, fontSize: 18.0),
-            ),
-            const SizedBox(height: 8.0),
-            Row(
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 20.0),
-                Text(
-                  rating.toString(),
-                  style: const TextStyle(fontSize: 18.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 30),
+              // Poster & Info
+              SizedBox(
+                height: 335,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Poster
+                    Expanded(
+                      flex: 2,
+                      child: Hero(
+                        tag: movie.poster,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(25),
+                          child: Image.network(
+                            movie.poster,
+                            fit: BoxFit.cover,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.broken_image,
+                                size: 100,
+                                color: Colors.grey,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 29),
+                    // Info
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          MovieInfo(
+                            icon: Icons.videocam_off_rounded,
+                            name: "Thể loại",
+                            value: movie.genre,
+                          ),
+                          MovieInfo(
+                            icon: Icons.timer,
+                            name: "Thời lượng",
+                            value: formatTime(Duration(minutes: movie.duration)),
+                          ),
+                          MovieInfo(
+                            icon: Icons.star_outlined,
+                            name: "Đánh giá",
+                            value: "${movie.rating}/10",
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              'Chọn thời gian chiếu:',
-              style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16.0),
-            // Hiển thị danh sách thời gian chiếu
-            Column(
-              children: showtimes.map((time) {
-                return GestureDetector(
-                  onTap: () {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      // Nếu đã đăng nhập, chuyển đến màn hình chọn ghế
-                      Navigator.pushNamed(context, Routes.seatSelection, arguments: time);
-                    } else {
-                      // Nếu chưa đăng nhập, chuyển đến màn hình đăng nhập
-                      Navigator.pushNamed(context, Routes.login);
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Text(
-                      time,
-                      style: const TextStyle(color: Colors.white, fontSize: 18.0),
-                    ),
+              ),
+              const SizedBox(height: 20),
+              // Tên phim
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  movie.title,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
-                );
-              }).toList(),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Phân cách
+              Divider(
+                color: Colors.white.withOpacity(0.1),
+                thickness: 1,
+              ),
+              const SizedBox(height: 20),
+              // Mô tả
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Mô tả",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Text(
+                movie.desc,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+              const SizedBox(height: 150),
+            ],
+          ),
+        ),
+      ),
+      // Nút đặt vé
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xff1c1c27),
+              blurRadius: 60,
+              spreadRadius: 80,
             ),
           ],
+        ),
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.transparent,
+          onPressed: () {}, // Sẽ dùng sự kiện của MaterialButton bên dưới
+          label: MaterialButton(
+            onPressed: () {
+              // Kiểm tra đăng nhập:
+              final currentUser = FirebaseAuth.instance.currentUser;
+
+              if (currentUser == null) {
+                // Nếu chưa đăng nhập => chuyển đến Login
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LoginScreen(),
+                  ),
+                );
+              } else {
+                // Đã đăng nhập => sang màn hình đặt ghế, truyền Movie
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SeatBookingScreen(movie: movie),
+                  ),
+                );
+              }
+            },
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(40),
+            ),
+            color: buttonColor,
+            height: 60,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 60),
+              child: Text(
+                "Đặt vé",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
+

@@ -1,3 +1,4 @@
+import 'package:dack/screen/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -7,17 +8,15 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Chuyển sang màn hình chính sau 3 giây
-    Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/home');
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    });
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(

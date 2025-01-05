@@ -1,6 +1,7 @@
+import 'package:dack/screen/home_screen.dart';
+import 'package:dack/screen/booked_tickets_screen.dart'; // Import BookedTicketsScreen
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../utils/routes.dart'; // Make sure to define the appropriate route for home
+import 'package:firebase_auth/firebase_auth.dart'; // Make sure to define the appropriate route for home
 
 class ProfileScreen extends StatelessWidget {
   final User user;
@@ -27,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
               backgroundImage: NetworkImage(user.photoURL ?? ''),
               backgroundColor: Colors.grey.shade200,
             ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // User Name
             Text(
@@ -45,9 +46,29 @@ class ProfileScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.black54,
               ),
-              
             ),
-            const SizedBox(height: 100),
+            const SizedBox(height: 20),
+
+            // View Booked Tickets Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BookedTicketsScreen(user: user),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange, // Modify color if needed
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+              ),
+              child: const Text(
+                'Xem Vé Đã Đặt',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 20),
 
             // Edit Profile Button
             ElevatedButton(
@@ -69,10 +90,11 @@ class ProfileScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushNamedAndRemoveUntil(
+                Navigator.pushReplacement(
                   context,
-                  Routes.home, // Ensure the route name is correct
-                      (route) => false,
+                  MaterialPageRoute(
+                    builder: (context) => const HomeScreen(), // Thay thế bằng widget LoginScreen
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(

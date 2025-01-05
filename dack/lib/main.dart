@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dack/screen/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'models/Seats.dart';
 import 'service/firebase_service.dart';
-import 'utils/routes.dart';
 
 void main() async {
   await FirebaseService.initializeFirebase();
+
   runApp(const MyApp());
 }
 
@@ -16,8 +19,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Ứng Dụng Đặt Vé Xem Phim',
       theme: ThemeData(primarySwatch: Colors.red),
-      initialRoute: Routes.splash,
-      onGenerateRoute: Routes.generateRoute,
+      home: SplashScreen(),
+
     );
   }
 }
